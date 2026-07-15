@@ -10,7 +10,6 @@
   "scripts": {
     "dev": "vite",
     "dev:netlify": "netlify dev",
-    "prebuild": "cp node_modules/@resvg/resvg-wasm/index_bg.wasm netlify/functions/",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -5,6 +5,7 @@
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["node_modules/@resvg/resvg-wasm/index_bg.wasm"]
 
 [[redirects]]
   from = "/api/kanji-image"

@@ -1,7 +1,7 @@
 import satori from "satori"
 import { initWasm, Resvg } from "@resvg/resvg-wasm"
 import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 const KANJI_API_URL = "https://kanjiapi.dev/v1/kanji"
 
@@ -22,8 +22,26 @@ let wasmReady: Promise<void> | null = null
 function ensureWasm(): Promise<void> {
 	if (!wasmReady) {
 		wasmReady = (async () => {
-			const wasmPath = join(import.meta.dirname || ".", "index_bg.wasm")
-			const wasmBuffer = readFileSync(wasmPath)
+			const base = import.meta.dirname || "."
+			const candidates = [
+				join(base, "index_bg.wasm"),
+				join(base, "../../node_modules/@resvg/resvg-wasm/index_bg.wasm"),
+				resolve(base, "../../../node_modules/@resvg/resvg-wasm/index_bg.wasm"),
+			]
+			let wasmBuffer: Buffer | null = null
+			for (const p of candidates) {
+				try {
+					wasmBuffer = readFileSync(p)
+					break
+				} catch {
+					continue
+				}
+			}
+			if (!wasmBuffer) {
+				throw new Error(
+					`WASM file not found. Tried: ${candidates.join(", ")}`,
+				)
+			}
 			await initWasm(wasmBuffer)
 		})()
 	}
