@@ -111,8 +111,8 @@ export default async (req: Request) => {
 				type: "div",
 				props: {
 					style: {
-						width: 400,
-						height: 500,
+						width: 1320,
+						height: 2868,
 						backgroundColor: "#282828",
 						display: "flex",
 						flexDirection: "column",
@@ -125,10 +125,10 @@ export default async (req: Request) => {
 							type: "div",
 							props: {
 								style: {
-									fontSize: 18,
+									fontSize: 60,
 									color: "#888888",
-									marginBottom: 24,
-									letterSpacing: 2,
+									marginBottom: 79,
+									letterSpacing: 6,
 									fontFamily: "Noto Sans JP",
 								},
 								children: `N${details.jlpt}`,
@@ -138,9 +138,9 @@ export default async (req: Request) => {
 							type: "div",
 							props: {
 								style: {
-									fontSize: 160,
+									fontSize: 528,
 									lineHeight: 1,
-									marginBottom: 24,
+									marginBottom: 79,
 									fontFamily: "Noto Serif JP",
 								},
 								children: kanji,
@@ -150,9 +150,9 @@ export default async (req: Request) => {
 							type: "div",
 							props: {
 								style: {
-									fontSize: 22,
+									fontSize: 73,
 									color: "#f0f0f0",
-									marginBottom: 48,
+									marginBottom: 158,
 									textTransform: "capitalize",
 									fontFamily: "Noto Sans JP",
 								},
@@ -164,7 +164,7 @@ export default async (req: Request) => {
 							props: {
 								style: {
 									display: "flex",
-									gap: 80,
+									gap: 264,
 								},
 								children: [
 									{
@@ -180,9 +180,9 @@ export default async (req: Request) => {
 													type: "div",
 													props: {
 														style: {
-															fontSize: 14,
+															fontSize: 46,
 															color: "#888888",
-															marginBottom: 8,
+															marginBottom: 26,
 															fontFamily: "Noto Sans JP",
 														},
 														children: "KUN",
@@ -192,7 +192,7 @@ export default async (req: Request) => {
 													type: "div",
 													props: {
 														style: {
-															fontSize: 28,
+															fontSize: 92,
 															fontFamily: "Noto Sans JP",
 														},
 														children: kunReading,
@@ -214,9 +214,9 @@ export default async (req: Request) => {
 													type: "div",
 													props: {
 														style: {
-															fontSize: 14,
+															fontSize: 46,
 															color: "#888888",
-															marginBottom: 8,
+															marginBottom: 26,
 															fontFamily: "Noto Sans JP",
 														},
 														children: "ON",
@@ -226,7 +226,7 @@ export default async (req: Request) => {
 													type: "div",
 													props: {
 														style: {
-															fontSize: 28,
+															fontSize: 92,
 															fontFamily: "Noto Sans JP",
 														},
 														children: onReading,
@@ -242,8 +242,8 @@ export default async (req: Request) => {
 				},
 			},
 			{
-				width: 400,
-				height: 500,
+				width: 1320,
+				height: 2868,
 				fonts: [
 					{
 						name: "Noto Serif JP",
@@ -262,7 +262,7 @@ export default async (req: Request) => {
 		)
 
 		const resvg = new Resvg(svg, {
-			fitTo: { mode: "width", value: 800 },
+			fitTo: { mode: "width", value: 1320 },
 		})
 		const pngData = resvg.render()
 		const pngBuffer = pngData.asPng()
