@@ -50,15 +50,25 @@ function ensureWasm(): Promise<void> {
 
 let cachedFont: ArrayBuffer | null = null
 
-async function getFont(): Promise<ArrayBuffer> {
+function getFont(): ArrayBuffer {
 	if (cachedFont) return cachedFont
 
-	const regular = await fetch(
-		"https://fonts.gstatic.com/s/notosansjp/v53/zjwtc5_VGPvsQhP9hiGAfPjsHD3U.woff2",
+	const base = import.meta.dirname || "."
+	const fontCandidates = [
+		join(base, "fonts/NotoSansJP-Regular.ttf"),
+		join(base, "../../netlify/functions/fonts/NotoSansJP-Regular.ttf"),
+	]
+	for (const p of fontCandidates) {
+		try {
+			cachedFont = readFileSync(p).buffer
+			return cachedFont
+		} catch {
+			continue
+		}
+	}
+	throw new Error(
+		`Font file not found. Tried: ${fontCandidates.join(", ")}`,
 	)
-	const data = await regular.arrayBuffer()
-	cachedFont = data
-	return data
 }
 
 export default async (req: Request) => {
@@ -84,7 +94,7 @@ export default async (req: Request) => {
 		}
 
 		const details: KanjiDetails = await response.json()
-		const font = await getFont()
+		const font = getFont()
 		const meaning = details.heisig_en || details.meanings[0] || ""
 		const kunReading = details.kun_readings[0] || "—"
 		const onReading = details.on_readings[0] || "—"
