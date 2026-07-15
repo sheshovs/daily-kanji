@@ -1,5 +1,7 @@
 import satori from "satori"
-import { Resvg } from "@resvg/resvg-js"
+import { initWasm, Resvg } from "@resvg/resvg-wasm"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 
 const KANJI_API_URL = "https://kanjiapi.dev/v1/kanji"
 
@@ -13,6 +15,19 @@ interface KanjiDetails {
 	on_readings: string[]
 	name_readings: string[]
 	heisig_en: string
+}
+
+let wasmReady: Promise<void> | null = null
+
+function ensureWasm(): Promise<void> {
+	if (!wasmReady) {
+		wasmReady = (async () => {
+			const wasmPath = join(import.meta.dirname || ".", "index_bg.wasm")
+			const wasmBuffer = readFileSync(wasmPath)
+			await initWasm(wasmBuffer)
+		})()
+	}
+	return wasmReady
 }
 
 let cachedFont: ArrayBuffer | null = null
@@ -33,19 +48,21 @@ export default async (req: Request) => {
 	const kanji = url.searchParams.get("kanji")
 
 	if (!kanji) {
-		return new Response(JSON.stringify({ error: "Missing 'kanji' query parameter" }), {
-			status: 400,
-			headers: { "Content-Type": "application/json" },
-		})
+		return new Response(
+			JSON.stringify({ error: "Missing 'kanji' query parameter" }),
+			{ status: 400, headers: { "Content-Type": "application/json" } },
+		)
 	}
 
 	try {
+		await ensureWasm()
+
 		const response = await fetch(`${KANJI_API_URL}/${kanji}`)
 		if (!response.ok) {
-			return new Response(JSON.stringify({ error: `Kanji '${kanji}' not found` }), {
-				status: 404,
-				headers: { "Content-Type": "application/json" },
-			})
+			return new Response(
+				JSON.stringify({ error: `Kanji '${kanji}' not found` }),
+				{ status: 404, headers: { "Content-Type": "application/json" } },
+			)
 		}
 
 		const details: KanjiDetails = await response.json()
@@ -135,9 +152,7 @@ export default async (req: Request) => {
 												{
 													type: "div",
 													props: {
-														style: {
-															fontSize: 28,
-														},
+														style: { fontSize: 28 },
 														children: kunReading,
 													},
 												},
@@ -167,9 +182,7 @@ export default async (req: Request) => {
 												{
 													type: "div",
 													props: {
-														style: {
-															fontSize: 28,
-														},
+														style: { fontSize: 28 },
 														children: onReading,
 													},
 												},
@@ -202,7 +215,7 @@ export default async (req: Request) => {
 		const pngData = resvg.render()
 		const pngBuffer = pngData.asPng()
 
-		return new Response(pngBuffer, {
+		return new Response(Buffer.from(pngBuffer), {
 			status: 200,
 			headers: {
 				"Content-Type": "image/png",
@@ -211,10 +224,13 @@ export default async (req: Request) => {
 		})
 	} catch (error) {
 		console.error("Error generating kanji image:", error)
-		return new Response(JSON.stringify({ error: "Failed to generate image" }), {
-			status: 500,
-			headers: { "Content-Type": "application/json" },
-		})
+		return new Response(
+			JSON.stringify({
+				error: "Failed to generate image",
+				details: error instanceof Error ? error.message : String(error),
+			}),
+			{ status: 500, headers: { "Content-Type": "application/json" } },
+		)
 	}
 }
 

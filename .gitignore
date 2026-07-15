@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+netlify/functions/index_bg.wasm
 
 # Editor directories and files
 .vscode/*
