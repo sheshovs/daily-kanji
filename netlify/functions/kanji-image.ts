@@ -48,27 +48,33 @@ function ensureWasm(): Promise<void> {
 	return wasmReady
 }
 
-let cachedFont: ArrayBuffer | null = null
+let cachedSerifFont: ArrayBuffer | null = null
+let cachedSansFont: ArrayBuffer | null = null
 
-function getFont(): ArrayBuffer {
-	if (cachedFont) return cachedFont
-
+function loadFont(filename: string): ArrayBuffer {
 	const base = import.meta.dirname || "."
-	const fontCandidates = [
-		join(base, "fonts/NotoSansJP-Regular.ttf"),
-		join(base, "../../netlify/functions/fonts/NotoSansJP-Regular.ttf"),
+	const candidates = [
+		join(base, `fonts/${filename}`),
+		join(base, `../../netlify/functions/fonts/${filename}`),
 	]
-	for (const p of fontCandidates) {
+	for (const p of candidates) {
 		try {
-			cachedFont = readFileSync(p).buffer
-			return cachedFont
+			return readFileSync(p).buffer
 		} catch {
 			continue
 		}
 	}
-	throw new Error(
-		`Font file not found. Tried: ${fontCandidates.join(", ")}`,
-	)
+	throw new Error(`Font file '${filename}' not found. Tried: ${candidates.join(", ")}`)
+}
+
+function getSerifFont(): ArrayBuffer {
+	if (!cachedSerifFont) cachedSerifFont = loadFont("NotoSerifJP-Regular.ttf")
+	return cachedSerifFont
+}
+
+function getSansFont(): ArrayBuffer {
+	if (!cachedSansFont) cachedSansFont = loadFont("NotoSansJP-Regular.ttf")
+	return cachedSansFont
 }
 
 export default async (req: Request) => {
@@ -94,7 +100,8 @@ export default async (req: Request) => {
 		}
 
 		const details: KanjiDetails = await response.json()
-		const font = getFont()
+		const serifFont = getSerifFont()
+		const sansFont = getSansFont()
 		const meaning = details.heisig_en || details.meanings[0] || ""
 		const kunReading = details.kun_readings[0] || "—"
 		const onReading = details.on_readings[0] || "—"
@@ -106,12 +113,12 @@ export default async (req: Request) => {
 					style: {
 						width: 400,
 						height: 500,
-						backgroundColor: "#ffffff",
+						backgroundColor: "#282828",
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "center",
 						justifyContent: "center",
-						fontFamily: "Noto Sans JP",
+						color: "#f0f0f0",
 					},
 					children: [
 						{
@@ -122,6 +129,7 @@ export default async (req: Request) => {
 									color: "#888888",
 									marginBottom: 24,
 									letterSpacing: 2,
+									fontFamily: "Noto Sans JP",
 								},
 								children: `N${details.jlpt}`,
 							},
@@ -133,6 +141,7 @@ export default async (req: Request) => {
 									fontSize: 160,
 									lineHeight: 1,
 									marginBottom: 24,
+									fontFamily: "Noto Serif JP",
 								},
 								children: kanji,
 							},
@@ -142,9 +151,10 @@ export default async (req: Request) => {
 							props: {
 								style: {
 									fontSize: 22,
-									color: "#333333",
+									color: "#f0f0f0",
 									marginBottom: 48,
 									textTransform: "capitalize",
+									fontFamily: "Noto Sans JP",
 								},
 								children: meaning,
 							},
@@ -171,8 +181,9 @@ export default async (req: Request) => {
 													props: {
 														style: {
 															fontSize: 14,
-															color: "#999999",
+															color: "#888888",
 															marginBottom: 8,
+															fontFamily: "Noto Sans JP",
 														},
 														children: "KUN",
 													},
@@ -180,7 +191,10 @@ export default async (req: Request) => {
 												{
 													type: "div",
 													props: {
-														style: { fontSize: 28 },
+														style: {
+															fontSize: 28,
+															fontFamily: "Noto Sans JP",
+														},
 														children: kunReading,
 													},
 												},
@@ -201,8 +215,9 @@ export default async (req: Request) => {
 													props: {
 														style: {
 															fontSize: 14,
-															color: "#999999",
+															color: "#888888",
 															marginBottom: 8,
+															fontFamily: "Noto Sans JP",
 														},
 														children: "ON",
 													},
@@ -210,7 +225,10 @@ export default async (req: Request) => {
 												{
 													type: "div",
 													props: {
-														style: { fontSize: 28 },
+														style: {
+															fontSize: 28,
+															fontFamily: "Noto Sans JP",
+														},
 														children: onReading,
 													},
 												},
@@ -228,8 +246,14 @@ export default async (req: Request) => {
 				height: 500,
 				fonts: [
 					{
+						name: "Noto Serif JP",
+						data: serifFont,
+						style: "normal",
+						weight: 400,
+					},
+					{
 						name: "Noto Sans JP",
-						data: font,
+						data: sansFont,
 						style: "normal",
 						weight: 400,
 					},
